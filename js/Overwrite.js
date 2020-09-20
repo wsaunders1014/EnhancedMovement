@@ -17,7 +17,9 @@ export class Overwrite {
 		Token.prototype.draw = async function(){
 			
 			await oldTokenDraw.apply(this);
-			this.speedUI = this.addChild(new PIXI.Container());
+			if(typeof this.speedUI == 'undefined')
+				this.speedUI = this.addChild(new PIXI.Container());
+			this.speedUI.visible = false;
 			this._drawSpeedUI();
 			return this;
 		}
@@ -25,14 +27,20 @@ export class Overwrite {
 			console.log()
 			this.remainingSpeed = this.getFlag('EnhancedMovement','remainingSpeed') || 0;
 			oldTokenRefresh.apply(this);
+			if(typeof this.speedUI == 'undefined')
+				this.speedUI = this.addChild(new PIXI.Container());
+			this.speedUI.visible = false;
 			this._drawSpeedUI();
 		}
 		Token.prototype._clearSpeedUI = function(){
 			try{this.speedUI.removeChildren()}catch(e){}
 		}
 		Token.prototype._drawSpeedUI = function(){
+
+
 			try{this.speedUI.removeChildren()}catch(e){}
 			 // Gate font size based on grid size
+
 			const speed = this.remainingSpeed;
 		    const gs = canvas.dimensions.size;
 		    let h = 24;
@@ -112,9 +120,19 @@ export class Overwrite {
 			
 			if(typeof this.speedUI != 'undefined'){
 				this.speedUI = this.addChild(new PIXI.Container());
-			    this.speedUI.addChild(bg);
-			    this.speedUI.addChild(sprite);
-			    this.speedUI.addChild(name)
+			    
+			}
+			this.speedUI.addChild(bg);
+		    this.speedUI.addChild(sprite);
+		    this.speedUI.addChild(name)
+			if(game.combat != null){
+				if(game.combat.round > 0)
+					this.speedUI.visible = true;
+				else
+					this.speedUI.visible = false;
+				
+			}else{
+				this.speedUI.visible = false;
 			}
 		  // return name;
 		}

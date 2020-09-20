@@ -1,6 +1,6 @@
 {
   "name": "EnhancedMovement",
-  "title": "EnhancedMovement",
+  "title": "Enhanced Movement",
   "description": "",
   "authors": [{"name":"Will Saunders","email":"willsaunders1014@gmail.com" }],
   "version": "0.0.1",
@@ -17,6 +17,9 @@
     {
       "name":"lib-find-the-path",
       "manifest":"https://raw.githubusercontent.com/dwonderley/lib-find-the-path/master/module.json"
+    },
+    {
+      "name":"TerrainLayer"
     }
   ],
   "languages": [

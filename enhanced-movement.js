@@ -1,6 +1,6 @@
 
 import MovementGrid from './classes/MovementGrid.js';
-import TerrainLayer from './classes/TerrainLayer.js';
+
 import { Overwrite } from './js/Overwrite.js';
 let speed;
 let combat;
@@ -51,11 +51,7 @@ Hooks.on('init',()=>{
     });
 
 });
-Hooks.once('canvasInit', () => {
-  // Add SimplefogLayer to canvas
-  const layerct = canvas.stage.children.length;
-  canvas.terrain = canvas.stage.addChildAt(new TerrainLayer(), layerct);
-});
+
 
 Hooks.on('ready',()=>{
 	//canvas.grid.addHighlightLayer(`EnhancedMovement.${game.userId}`);
@@ -102,9 +98,14 @@ Hooks.on('updateCombat',(combat,data,diff,userID)=>{
 		//OLD ROUND
 	}
 	if(diff.diff){
-		if(data.hasOwnProperty('turn')){
+		if(data.hasOwnProperty('turn') && combat.combatant !=null){
 			//New Turn
 			console.log('new turn');
+			token.setFlag('EnhancedMovement','nDiagonal',0)
+			token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed)
+		}
+		if(data.hasOwnProperty('round') && !data.hasOwnProperty('turn') && combat.combatant !=null){
+			//New Round, but same turn, ie only one person in combat tracker
 			token.setFlag('EnhancedMovement','nDiagonal',0)
 			token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed)
 		}
@@ -120,7 +121,8 @@ Hooks.on('deleteCombat',async (combat)=>{
 		let token = canvas.tokens.get(combatant.tokenId);
 		token.setFlag('EnhancedMovement','nDiagonal',0)
 		token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed);
-		if(token._controlled) token.movementGrid.highlightGrid();
+		token.movementGrid.clear();
+		//if(token._controlled) token.movementGrid.highlightGrid();
 	})
 })
 Hooks.on('createCombatant',(combat,combatant,data,)=>{
@@ -178,6 +180,7 @@ Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
       			let spaces = (nd10 * 2) + (nd - nd10) + ns;
 			    distance = spaces * canvas.dimensions.distance;
 			}
+			if(gmAltPress) distance = 0;
 			// if(Math.abs(next.x - prev.x) > canvas.dimensions.size && Math.abs(next.y-prev.y)> canvas.dimensions.size)
 				 
 			// else
@@ -214,19 +217,25 @@ Hooks.on('updateToken',(scene,tokenData,updates,diff)=>{
 	if(game.combat !== null && game.combat.started){
 		if(token.movementGrid != null)
 			token.movementGrid.clear();
+
+		if(token._controlled && getProperty(updates,'flags.EnhancedMovement.remainingSpeed')){
+			token.movementGrid.highlightGrid();
+		}
 	}
 	
 		
-		
-	if(interval == null) {
-		interval = setInterval(()=>{
-			
-			if(token._movement == null){
-				clearInterval(interval);
-				interval = null;
-				Hooks.call('moveToken',token)
-			}
-		},100)
+	if(updates.hasOwnProperty('x') || updates.hasOwnProperty('y')){
+		token.movementGrid.clear();
+		if(interval == null) {
+			interval = setInterval(()=>{
+				
+				if(token._movement == null){
+					clearInterval(interval);
+					interval = null;
+					Hooks.call('moveToken',token)
+				}
+			},100)
+		}
 	}
 	
 })
