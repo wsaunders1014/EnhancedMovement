@@ -56,6 +56,9 @@ Hooks.on('init',()=>{
 
 Hooks.on('ready',()=>{
 	//canvas.grid.addHighlightLayer(`EnhancedMovement.${game.userId}`);
+	canvas.tokens.placeables.forEach((token)=>{
+		token.movementGrid = new MovementGrid(token);
+	})
 	 if (game.user.isGM){
 		$(window).on('keydown',(e)=>{
 			switch(e.which){
@@ -89,8 +92,7 @@ Hooks.on('updateCombat',(combat,data,diff,userID)=>{
 	//console.log(combat.previous.round,combat.previous.turn,combat.current.round,combat.current.turn,data,diff,userID)
 	let token = (typeof combat.combatant != 'undefined') ? canvas.tokens.get(combat.combatant.tokenId):null;
 	if(combat.combatant != null && typeof data.turn != 'undefined' && data.turn != combat.previous.turn){
-		console.log('speed: ',combat.combatant.actor.data.data.attributes.speed.value)
-		//combat.setFlag('EnhancedMovement','data',{speed:parseFloat(combat.combatant.actor.data.data.attributes.speed.value),startingPoint:{x:combat.combatant.token.x,y:combat.combatant.token.y}})
+		
 	}
 	if(combat.current.round > combat.previous.round){
 		//NEW ROUND
@@ -103,17 +105,24 @@ Hooks.on('updateCombat',(combat,data,diff,userID)=>{
 			//New Turn
 			console.log('new turn');
 			token.setFlag('EnhancedMovement','nDiagonal',0)
-			token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed)
+			token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed).then(()=>{
+				if(token._controlled) token.movementGrid.highlightGrid();
+			});
+
 		}
 		if(data.hasOwnProperty('round') && !data.hasOwnProperty('turn') && combat.combatant !=null){
 			//New Round, but same turn, ie only one person in combat tracker
 			token.setFlag('EnhancedMovement','nDiagonal',0)
 			token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed)
 		}
-		if(data.active){
-			//Combat was created. 
+		if(data.round == 1 && combat.previous.round !== 2){
+
+			//Combat Started
+			canvas.tokens.placeables.forEach((token)=>{
+				token.refresh();
+				if(token._controlled) token.movementGrid.highlightGrid();
+			})
 		}
-		
 	}
 
 })
@@ -122,8 +131,12 @@ Hooks.on('deleteCombat',async (combat)=>{
 		let token = canvas.tokens.get(combatant.tokenId);
 		token.setFlag('EnhancedMovement','nDiagonal',0)
 		token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed);
-		token.movementGrid.clear();
 		
+		
+	});
+	canvas.tokens.placeables.forEach((token)=>{
+		token.refresh();
+		token.movementGrid.clear();
 	})
 })
 Hooks.on('createCombatant',(combat,combatant,data,)=>{
@@ -138,7 +151,7 @@ Hooks.on('controlToken',(token,controlled)=>{
 	// else
 	// 	token._clearSpeedUI();
 	if(token.movementGrid == null)
-				token.movementGrid = new MovementGrid(token)
+		token.movementGrid = new MovementGrid(token)
 	if((game.combat !== null) && typeof game.combat.combatant != 'undefined'){ 
 
 		if(controlled && game.combat.combatant.tokenId == token.id && game.combat.round >0){

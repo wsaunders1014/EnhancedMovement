@@ -6,10 +6,11 @@ export default class MovementGrid {
 	constructor(token) {
 		this.id = game.userId;
 		this.user = game.user;
-		this.name = `EnhancedMovement.${game.userId}`;
+		
 		this.borderColor = game.user.color;
 		this.fillColor = game.user.color;
 		this.token = token;
+		this.name = `EnhancedMovement.${token._id}`;
 		this.pf = game.FindThePath.Chebyshev.PointFactory;
 		this.PM = new PathManager (MinkowskiParameter.Chebyshev);
        	this.visible = false;
