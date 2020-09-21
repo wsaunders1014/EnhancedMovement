@@ -18,7 +18,7 @@ export default class MovementGrid {
 
 	}
 	async highlightGrid(dash=false) {
-
+		console.log('highlightGrid')
 		this.clear();
 	    const center = this.token.center;
 		let speed = this.token.remainingSpeed;

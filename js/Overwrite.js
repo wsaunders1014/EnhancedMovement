@@ -66,7 +66,7 @@ export class Overwrite {
 		  	});
 		    const textHeight = 36; // This is a magic number which PIXI renders at font size 36
 
-		    // Anchor to the top-center of the nameplate
+		    // Anchor to the top-right of the nameplate
 		    name.anchor.set(1, 0);
 
 		    // Adjust dimensions
@@ -89,7 +89,7 @@ export class Overwrite {
 
 		    // Set position at bottom of token
 		    let ox = gs / 24;
-		    name.position.set(this.w, 0 - 25);
+		    name.position.set(this.w-2, 8);
 		   
 
 		    let sprite = PIXI.Sprite.from('./modules/EnhancedMovement/assets/walking-solid.svg');
@@ -108,14 +108,14 @@ export class Overwrite {
 		   
 		    // Set position at bottom of token
 		    ox = gs / 24;
-		    sprite.position.set(this.w-20, 0 - 22);
+		    sprite.position.set(this.w-name.width-3, 11 );
 		    
-
+		    let totalWidth = sprite.width+name.width;
 		    const bg = new PIXI.Graphics();
 		   
 		    bg.lineStyle(1, 0x333333, 1);
 			bg.beginFill(0x555555, 0.9);
-			bg.drawRoundedRect(this.w-42,0 -sprite.height-11 , 45, sprite.height +5 , 5);
+			bg.drawRoundedRect(this.w-totalWidth-6,10 , totalWidth+6, sprite.height +3 , 5);
 			bg.endFill();
 			
 			if(typeof this.speedUI != 'undefined'){
