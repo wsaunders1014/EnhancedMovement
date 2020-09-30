@@ -1,5 +1,6 @@
-
-import MovementGrid from './classes/MovementGrid.js';
+import SpeedHUD from './classes/SpeedHUD.js';
+import EnhancedMovement from './classes/EnhancedMovement.js';
+//import MovementGrid from './classes/MovementGrid.js';
 import { Overwrite } from './js/Overwrite.js';
 let speed;
 let combat;
@@ -14,24 +15,24 @@ Hooks.on('init',()=>{
 	CONFIG.debug.hooks = true;
 	//CONFIG.debug.mouseInteraction = true;
 	//console.log(new PathManager)
-	game.settings.register('EnhancedMovement', 'enableGrid', {
-		name: "Grid Movement Preview",
-		hint: "Displays all points character can move within their speed during combat.",
-		scope: "client",
-		config: true,
-		default: true,
-		type: Boolean
-      //onChange: x => window.location.reload()
-    });
-	game.settings.register('EnhancedMovement', 'preventMove', {
-		name: "Prevent Movement",
-		hint: "Restricts movement during combat to only the current token. Will still fire warning.",
-		scope: "world",
-		config: true,
-		default: true,
-		type: Boolean
-      //onChange: x => window.location.reload()
-    });
+	// game.settings.register('EnhancedMovement', 'enableGrid', {
+	// 	name: "Grid Movement Preview",
+	// 	hint: "Displays all points character can move within their speed during combat.",
+	// 	scope: "client",
+	// 	config: true,
+	// 	default: true,
+	// 	type: Boolean
+ //      //onChange: x => window.location.reload()
+ //    });
+	// game.settings.register('EnhancedMovement', 'preventMove', {
+	// 	name: "Prevent Movement",
+	// 	hint: "Restricts movement during combat to only the current token. Will still fire warning.",
+	// 	scope: "world",
+	// 	config: true,
+	// 	default: true,
+	// 	type: Boolean
+ //      //onChange: x => window.location.reload()
+ //    });
  //    game.settings.register('EnhancedMovement', 'disableNonGridMove', {
 	// 	name: "Disable Non Grid Movement",
 	// 	hint: "During combat, restricts player movement to grid.",
@@ -42,8 +43,8 @@ Hooks.on('init',()=>{
  //      //onChange: x => window.location.reload()
 	// })
 	game.settings.register('EnhancedMovement', 'speedLimit', {
-		name: "Restrict token movement to its speed?",
-		hint: "During combat, prevent token from exceeding its speed. Out of combat, tokens can only move up to their max speed at a time. ",
+		name: "EnhancedMovement.speedLimit-s",
+		hint: "EnhancedMovement.speedLimit-l",
 		scope: "world",
 		config: true,
 		default: true,
@@ -53,12 +54,23 @@ Hooks.on('init',()=>{
 
 });
 
-
+// function getTokenMovementTypes(token){
+// 	if(!token.hasOwnProperty('actor')) return false;
+// 	let normal = 'walking'
+// 	let array = token.actor.data.data.attributes.speed.special
+// 	let special = token.actor.data.data.attributes.speed.special;
+// }
 Hooks.on('ready',()=>{
 	//canvas.grid.addHighlightLayer(`EnhancedMovement.${game.userId}`);
 	canvas.tokens.placeables.forEach((token)=>{
-		token.movementGrid = new MovementGrid(token);
+		if(typeof token.actor != 'undefined'){
+			//token.movementGrid = new MovementGrid(token);
+			token.EnhancedMovement = new EnhancedMovement(token);
+		}
 	})
+
+	canvas.hud.speedHUD.updateHUD({},true)
+	//Allows GM to override movement restrictions.
 	 if (game.user.isGM){
 		$(window).on('keydown',(e)=>{
 			switch(e.which){
@@ -81,6 +93,21 @@ Hooks.on('ready',()=>{
 			
 		})
 	}
+	$('body').on('click','#dash-btn',function(e){
+		if($(this).hasClass('active')){
+			if(canvas.tokens.controlled[0].EnhancedMovement.totalSpeed < canvas.tokens.controlled[0].EnhancedMovement.maxSpeed){
+				$(this).removeClass('active')
+				canvas.tokens.controlled[0].EnhancedMovement.unDash();
+			}
+
+		}else{
+			$(this).addClass('active');
+			canvas.tokens.controlled[0].EnhancedMovement.dash();
+		}
+	})
+	//Create SPEEDUI
+	//game.user.speedHUD = new SpeedHUD().render(true);
+	canvas.hud.speedHUD.render(true);
 })
 //COMBAT HOOKS
 Hooks.on('createCombat',(combat,data,userID)=>{
@@ -89,89 +116,122 @@ Hooks.on('createCombat',(combat,data,userID)=>{
 
 Hooks.on('updateCombat',(combat,data,diff,userID)=>{
 	console.log(combat,data)
+	
 	//console.log(combat.previous.round,combat.previous.turn,combat.current.round,combat.current.turn,data,diff,userID)
 	let token = (typeof combat.combatant != 'undefined') ? canvas.tokens.get(combat.combatant.tokenId):null;
-	if(combat.combatant != null && typeof data.turn != 'undefined' && data.turn != combat.previous.turn){
+	// if(combat.combatant != null && typeof data.turn != 'undefined' && data.turn != combat.previous.turn){
 		
-	}
-	if(combat.current.round > combat.previous.round){
-		//NEW ROUND
-
-	}else if (combat.current.round < combat.previous.round){
-		//OLD ROUND
-	}
-	if(diff.diff){
-		if(data.hasOwnProperty('turn') && combat.combatant !=null){
+	// }
+	if(diff.diff && game.user.isGM){
+		if((data.hasOwnProperty('turn') || data.hasOwnProperty('round')) && combat.combatant !=null){
 			//New Turn
 			console.log('new turn');
 			token.setFlag('EnhancedMovement','nDiagonal',0)
-			token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed).then(()=>{
-				if(token._controlled) token.movementGrid.highlightGrid();
-			});
+			
+			if(data.hasOwnProperty('round')){
+				//new round
 
-		}
-		if(data.hasOwnProperty('round') && !data.hasOwnProperty('turn') && combat.combatant !=null){
-			//New Round, but same turn, ie only one person in combat tracker
-			token.setFlag('EnhancedMovement','nDiagonal',0)
-			token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed)
-		}
-		if(data.round == 1 && combat.previous.round !== 2){
-
-			//Combat Started
-			canvas.tokens.placeables.forEach((token)=>{
-				token.refresh();
-				if(token._controlled) token.movementGrid.highlightGrid();
+				let nonCombatTokens = canvas.tokens.placeables.filter((token)=>{
+					let index = game.combat.combatants.findIndex((combatant)=>{
+						return token.id == combatant.tokenId;
+					})
+					if(index == -1) return true;
+					else return false;
+					
+				})
+				nonCombatTokens.forEach((token)=>{
+					token.EnhancedMovement.reset();
+				})
+				
+			}
+			game.combat.combatants.forEach((c)=>{
+				if(c.tokenId != game.combat.combatant.tokenId)
+					canvas.tokens.get(c.tokenId).EnhancedMovement.endTurn();
 			})
+			
+			token.EnhancedMovement.reset();
+			// token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed).then(()=>{
+			// 	//if(token._controlled) token.movementGrid.highlightGrid();
+			// });
+			if(token.id == canvas.hud.speedHUD.token.id){
+				canvas.hud.speedHUD.updateTracker()
+			}else{
+				canvas.hud.speedHUD.updateTracker();
+			}
+		}
+		
+		if(data.round == 1 && combat.previous.round !== 2 && game.user.isGM){
+			//Combat Started
+			if(token !== null){
+				canvas.hud.speedHUD.token = token;
+				canvas.hud.speedHUD.updateHUD({},true);
+				canvas.hud.speedHUD.updateTracker()
+			}
+			canvas.tokens.placeables.forEach((token)=>{
+				token.EnhancedMovement.reset()
+				token.refresh();
+			});
+			
 		}
 	}
-
 })
+
 Hooks.on('deleteCombat',async (combat)=>{
-	combat.combatants.map((combatant)=>{
-		let token = canvas.tokens.get(combatant.tokenId);
-		token.setFlag('EnhancedMovement','nDiagonal',0)
-		token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed);
-		
-		
-	});
-	canvas.tokens.placeables.forEach((token)=>{
-		token.refresh();
-		token.movementGrid.clear();
-	})
+	if(game.user.isGM){
+		// combat.combatants.map((combatant)=>{
+		// 	let token = canvas.tokens.get(combatant.tokenId);
+		// 	token.EnhancedMovement.reset();
+		// 	canvas.hud.speedHUD.updateTracker()
+			
+			
+		// });
+		canvas.tokens.placeables.forEach((token)=>{
+			token.EnhancedMovement.reset();
+			token.refresh();
+			if(canvas.hud.speedHUD.token != false)
+				canvas.hud.speedHUD.updateTracker()
+			//token.movementGrid.clear();
+		})
+	}
 })
-Hooks.on('createCombatant',(combat,combatant,data,)=>{
 
+Hooks.on('createCombatant',(combat,combatant,data,)=>{
+	if(canvas.hud.speedHUD.token.id == combatant.tokenId){
+		canvas.hud.speedHUD.updateTracker();
+	}
 })
 //TOKEN HOOKS
 Hooks.on('controlToken',(token,controlled)=>{
+	console.log(token,controlled)
 	//If user selects multiple tokens, this will be last one selected
 	cToken = (controlled) ? token:null;
-	// if(controlled)
-	// 	token._drawSpeedUI();
-	// else
-	// 	token._clearSpeedUI();
-	if(token.movementGrid == null)
-		token.movementGrid = new MovementGrid(token)
-	if((game.combat !== null) && typeof game.combat.combatant != 'undefined'){ 
-
-		if(controlled && game.combat.combatant.tokenId == token.id && game.combat.round >0){
-			
-			token.movementGrid.highlightGrid();
-			
+	
+	if(controlled){
+		canvas.hud.speedHUD.token = token;
+		canvas.hud.speedHUD.updateHUD({},true);
 		
-		}else{
-			if(token.movementGrid != null)
-				token.movementGrid.clear();
-		}
+	}else{
+		canvas.hud.speedHUD.token = false;
+		
+		setTimeout(()=>{
+			console.log(canvas.hud.speedHUD.token)
+			if(canvas.hud.speedHUD.token){
+				canvas.hud.speedHUD.updateHUD({},true);
+			}else{
+				canvas.hud.speedHUD.close();
+			}
+		},200)
 	}
+	
 })
 let nDiagonal = 0;
 Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
+	//if(game)
 	let token = canvas.tokens.get(tokenData._id)
 
 	if(game.combat !== null && (typeof updates.y != 'undefined' || typeof updates.x != 'undefined')){
 		//COMBAT exists and token moved.
-		if( game.combat.started && game.combat.combatant.tokenId == tokenData._id){
+		//if( game.combat.started && game.combat.combatant.tokenId == tokenData._id){
 			let nDiagonal = token.getFlag('EnhancedMovement','nDiagonal') || 0;
 			const prev = {x:token._validPosition.x,y:token._validPosition.y}
 			const next = {x:updates.x || token.x,y:updates.y || token.y}
@@ -194,7 +254,8 @@ Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
 			}
 			if(gmAltPress) distance = 0;
 			
-			let speed = token.remainingSpeed;		
+			let speed = token.EnhancedMovement.remainingSpeed;
+					
 			let modSpeed = speed - distance;
 			if(modSpeed < 0 && !gmAltPress){
 				/// need to broadcast this.
@@ -202,33 +263,47 @@ Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
 				ui.notifications.warn("Creature has exceeded their movement speed this turn.", {permanent: false});
 				return false;
 			}else{
-				token.remainingSpeed = (modSpeed < 0) ? 0:modSpeed;
-				token.setFlag('EnhancedMovement','remainingSpeed',modSpeed);
+				token.EnhancedMovement.totalSpeed += distance;
+				token.EnhancedMovement.remainingSpeed = (modSpeed < 0) ? 0:modSpeed;
+				token.setFlag('EnhancedMovement','remainingSpeed', modSpeed);
+				canvas.hud.speedHUD.updateHUD({},true)
 			}
-		}else if(!gmAltPress && game.combat.started && game.settings.get('EnhancedMovement','preventMove') && game.combat.combatants.findIndex((i)=>{return i.tokenId == token.id}) !== -1){
+	//	}else 
+		if( game.combat.started && game.combat.combatant.tokenId == tokenData._id){
+		}else if(!gmAltPress && game.combat.started  && game.combat.combatants.findIndex((i)=>{return i.tokenId == token.id}) !== -1){
 			ui.notifications.warn("It is not your move.", {permanent: false});
-			return false;
+			//return false;
 		}
 	}
 })
 let interval = null;
 Hooks.on('updateToken',(scene,tokenData,updates,diff)=>{
 	let token = canvas.tokens.get(tokenData._id)
-	//Combat has started
-	//console.log(tokenData)
-	if(game.combat !== null && game.combat.started){
-		if(token.movementGrid != null)
-			token.movementGrid.clear();
+	if(updates.hasOwnProperty('flags')){
+		if(updates.flags.hasOwnProperty('EnhancedMovement')){
+			if(updates.flags.EnhancedMovement.hasOwnProperty('remainingSpeed')){
+				token.EnhancedMovement.remainingSpeed = updates.flags.EnhancedMovement.remainingSpeed;
+				token.refresh();
 
-		if(token._controlled && getProperty(updates,'flags.EnhancedMovement.remainingSpeed')){
-			if(token.movementGrid.visible)
-				token.movementGrid.highlightGrid();
+				if(canvas.hud.speedHUD.token.id == token.id){
+					canvas.hud.speedHUD.updateHUD({},true);
+				}
+			}
 		}
 	}
+	//Combat has started
+	//console.log(tokenData)
+	/*if(game.combat !== null && game.combat.started){
+		//if(token.movementGrid != null) token.movementGrid.clear();
+
+		if(token._controlled && getProperty(updates,'flags.EnhancedMovement.remainingSpeed')){
+			//if(token.movementGrid.visible) token.movementGrid.highlightGrid();
+		}
+	}*/
 	
 		
 	if(updates.hasOwnProperty('x') || updates.hasOwnProperty('y')){
-		token.movementGrid.clear();
+		//token.movementGrid.clear();
 		if(interval == null) {
 			interval = setInterval(()=>{
 				
@@ -243,66 +318,58 @@ Hooks.on('updateToken',(scene,tokenData,updates,diff)=>{
 	
 })
 Hooks.on('moveToken',(token)=>{
-	if(game.combat !== null && game.combat.started){
-		if(game.combat.combatant.tokenId == token.id)
-			token.movementGrid.highlightGrid();
+	if(game.user.isGM) {
+		if(game.combat !== null && game.combat.started){
+			//if(game.combat.combatant.tokenId == token.id) token.movementGrid.highlightGrid();
+		}
+		token.previousLocation.push({x:token.x,y:token.y});
 	}
-	token.previousLocation.push({x:token.x,y:token.y}); 
 })
 
 Hooks.on('createToken',(scene,tokenData)=>{
-	let token = canvas.tokens.get(tokenData._id);
-	token.remainingSpeed = token.maxSpeed;
-	token.movementGrid = new MovementGrid(token);
-	token.setFlag('EnhancedMovement','remainingSpeed',token.maxSpeed);
+	if(game.user.isGM){
+		let token = canvas.tokens.get(tokenData._id);
+		token.EnhancedMovement = new EnhancedMovement(token);
+		token.setFlag('EnhancedMovement','remainingSpeed',token.EnhancedMovement.maxSpeed);
+	}
 })
 //ACTOR HOOKS
-Hooks.on('preUpdateActor',async (actor,data,diff,userID)=>{
-	console.log(actor.data.data.attributes.speed.value)
-	if(typeof data.data.attributes.speed.value != undefined) {
+Hooks.on('updateActor',async (actor,data,diff,userID)=>{
+	if(typeof data.data.attributes.speed.value != 'undefined') {
 		let newSpeed = data.data.attributes.speed.value;
 		let tokens = getTokensFromActor(actor);
 		if(tokens.length > 0){
 			tokens.forEach((token)=>{
-				let diff = token.remainingSpeed - token.maxSpeed;
+				let diff = token.EnhancedMovement.remainingSpeed - token.EnhancedMovement.maxSpeed;
 
-				token.remainingSpeed = newSpeed - diff;
+				token.EnhancedMovement.remainingSpeed = newSpeed - diff;
+				canvas.hud.speedHUD.updateHUD({},true)
 				token.setFlag('EnhancedMovement','remainingSpeed', newSpeed-diff);
 				token.refresh();
-				console.log(token.movementGrid.visible)
-				if(token.movementGrid.visible == true)
-					token.movementGrid.highlightGrid();
+				
+				//if(token.movementGrid.visible == true) token.movementGrid.highlightGrid();
 			})
 		}
 	}
-	
-	
+	if(typeof data.data.attributes.speed.special != 'undefined'){
+		 let special = data.data.attributes.speed.special;
+		console.log(special)
+		let tokens = getTokensFromActor(actor);
+		if(tokens.length > 0){
+			tokens.forEach((token)=>{
+				token.EnhancedMovement.getMovementTypes();
+				if(canvas.hud.speedHUD.token.id == token.id)
+					canvas.hud.speedHUD.updateHUD({},true)
+			})
+		}
+	}
 })
 function getTokensFromActor(actor){
 	return canvas.tokens.placeables.filter(t => t.actor.id === actor.id);
 }
 
-// Set movement speed in token flag.
-//Stop token movement when combat is active and it's not their turn.
-//if it is their turn and combat is active, deduct movement.
-
-/* Credit to @Vance in Foundry Discord for these macros*/
-function get5eGridDist(one, two) {
-  let gs = canvas.grid.size;
-  let d1 = Math.abs((one.x - two.x) / gs);
-  let d2 = Math.abs((one.y - two.y) / gs);
-  let dist = Math.max(d1, d2);
-  dist = dist * canvas.scene.data.gridDistance;
-  return dist;
-}
-function get5eGridDistAlt(one, two) {
-  let gs = canvas.grid.size;
-  let d1 = Math.abs((one.x - two.x) / gs);
-  let d2 = Math.abs((one.y - two.y) / gs);
-  let maxDim = Math.max(d1, d2);
-  let minDim = Math.min(d1, d2);
-
-  let dist = (maxDim + Math.floor(minDim / 2)) * canvas.scene.data.gridDistance;
-  return dist;
-}
-/*********************************************************** */
+Hooks.on('renderTokenHUD',(tokenHUD,element,data)=>{
+	let token = canvas.tokens.get(data._id)
+	let isDashing = (token.EnhancedMovement.isDashing) ? 'active':''
+	element.find('.elevation').append(`<div id="dash-btn" class="control-icon fas fa-running ${isDashing}"></div>`)
+})

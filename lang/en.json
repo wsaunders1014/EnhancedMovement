@@ -1,11 +1,4 @@
 {
-  "EM.ok": "OK",
-  "EM.sf": "Terrain Grid",
-  "EM.select":"Select Spaces",
-  "EM.fill":"Fill Grid",
-  "EM.confirmFill":"This will mark every grid space as difficult terrain, overwriting any spots you've marked.",
-  "EM.onoff": "Enable/Disable Terrain",
-  "EM.sceneConfig": "Scene Configuration",
-  "EM.reset": "Reset Terrain",
-  "EM.confirmReset": "Are you sure? Terrain layer will be reset."
+	"EnhancedMovement.speedLimit-s":"Restrict token movement to its speed?",
+	"EnhancedMovement.speedLimit-l":"During combat, prevent token from exceeding its speed."
 }

@@ -1,7 +1,7 @@
 {
   "name": "EnhancedMovement",
   "title": "Enhanced Movement",
-  "description": "",
+  "description": "A module that sets out to track player's movement during combat.",
   "authors": [{"name":"Will Saunders","email":"willsaunders1014@gmail.com" }],
   "version": "0.0.1",
   "minimumCoreVersion": "0.6.4",
@@ -9,9 +9,11 @@
   "scripts":[
     
   ],
+  "styles":[
+     "css/style.css"
+  ],
   "esmodules": [
-    "enhanced-movement.js",
-    "js/controls.js"
+    "enhanced-movement.js"
   ],
   "dependencies":[
     {
@@ -29,8 +31,8 @@
       "path": "lang/en.json"
     }
   ],
-  "changelog":"https://raw.githubusercontent.com/wsaunders1014/laptop-fix/master/README.md",
-  "url":"https://github.com/wsaunders1014/laptop-fix",
-  "manifest":"https://raw.githubusercontent.com/wsaunders1014/laptop-fix/master/module.json",
-  "download":"https://github.com/wsaunders1014/laptop-fix/releases/download/0.0.8/laptop-fix.zip"
+  "changelog":"https://raw.githubusercontent.com/wsaunders1014/EnhancedMovement/master/README.md",
+  "url":"https://github.com/wsaunders1014/EnhancedMovement",
+  "manifest":"https://raw.githubusercontent.com/wsaunders1014/EnhancedMovement/master/module.json",
+  "download":"https://github.com/wsaunders1014/EnhancedMovement/releases/download/0.0.1/laptop-fix.zip"
 }

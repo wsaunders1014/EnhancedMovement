@@ -1,0 +1,24 @@
+
+	<form id="{{options.id}}" class="{{options.classes}} {{#if active}}active{{/if}}" data-appid="{{options.appId}}" autocomplete="off" onsubmit="event.preventDefault();">
+		<div id="turn-tracker" class="turn-indicator {{data.on}}"></div>
+		<div id="token-name">{{data.name}}</div>
+		<div class="input-container">
+			<div id="mode" class="movement-mode {{data.modeIcon}}">
+				{{#if data.modeList}}
+				<ul id="otherModes" class="otherModes">
+					<div class="app">
+						{{#each data.modeList}}
+							{{#with (lookup ../ui this)}}
+							
+								<li data-type="{{name}}" class="{{icon}}"></li>
+							
+							{{/with}}
+						{{/each}}
+					</div>
+				</ul>
+				{{/if}}
+			</div>
+			<div id="moveSpeed" class="moveSpeed" contenteditable="true" name="moveSpeed" >{{data.remainingSpeed}}</div>
+			<label for="moveSpeed">{{data.speedUnit}}</label>
+		</div>
+	</form>

@@ -1,16 +1,23 @@
+import SpeedHUD from '../classes/SpeedHUD.js';
+
 export class Overwrite {
 	static init(){
+		HeadsUpDisplay.prototype.speedHUD = new SpeedHUD();
+
+
 		Token.prototype.previousLocation = [];
-		Token.prototype.remainingSpeed = 0;
+		//Token.prototype.remainingSpeed = 0;
+		//Token.prototype.movementMode = 'walking';
+		//Token.prototype.movementTypes = [];
 		let oldPOClone = PlaceableObject.prototype.clone;
 		let oldTokenDraw = Token.prototype.draw;
 		let oldTokenRefresh = Token.prototype.refresh;
 
-		Object.defineProperty(Token.prototype,'maxSpeed',  {
-		    get() {
-		       return parseFloat(this.actor.data.data.attributes.speed.value);
-			}}
-		);
+		// Object.defineProperty(Token.prototype,'maxSpeed',  {
+		//     get() {
+		//        return parseFloat(this.actor.data.data.attributes.speed.value);
+		// 	}}
+		// );
 
 
 		/// METHODS
@@ -20,17 +27,19 @@ export class Overwrite {
 			if(typeof this.speedUI == 'undefined')
 				this.speedUI = this.addChild(new PIXI.Container());
 			this.speedUI.visible = false;
-			this._drawSpeedUI();
+			if(typeof this.EnhancedMovement != 'undefined' && this.owner == true)
+				this._drawSpeedUI();
 			return this;
 		}
 		Token.prototype.refresh = function(){
 			console.log()
-			this.remainingSpeed = this.getFlag('EnhancedMovement','remainingSpeed') || 0;
+		//	this.remainingSpeed = this.EnhancedMovement.remainingSpeed; //this.getFlag('EnhancedMovement','remainingSpeed') || 0;
 			oldTokenRefresh.apply(this);
 			if(typeof this.speedUI == 'undefined')
 				this.speedUI = this.addChild(new PIXI.Container());
 			this.speedUI.visible = false;
-			this._drawSpeedUI();
+			if(typeof this.EnhancedMovement != 'undefined' && this.owner == true)
+				this._drawSpeedUI();
 		}
 		Token.prototype._clearSpeedUI = function(){
 			try{this.speedUI.removeChildren()}catch(e){}
@@ -41,7 +50,7 @@ export class Overwrite {
 			try{this.speedUI.removeChildren()}catch(e){}
 			 // Gate font size based on grid size
 
-			const speed = this.remainingSpeed;
+			const speed = this.EnhancedMovement.remainingSpeed;
 		    const gs = canvas.dimensions.size;
 		    let h = 24;
 		    if ( gs >= 200 ) h = 36;
@@ -52,7 +61,7 @@ export class Overwrite {
 		   
 		    const name = new PIXI.Text(speed, {
 			    fontFamily: "Signika",
-			    fontSize: 28,
+			    fontSize: 36,
 			    fill: "#FFFFFF",
 			    stroke: '#111111',
 			    strokeThickness: 1,
@@ -64,7 +73,7 @@ export class Overwrite {
 			    align: "center",
 			    wordWrap: false
 		  	});
-		    const textHeight = 36; // This is a magic number which PIXI renders at font size 36
+		    const textHeight = 48; // This is a magic number which PIXI renders at font size 36
 
 		    // Anchor to the top-right of the nameplate
 		    name.anchor.set(1, 0);
@@ -89,33 +98,33 @@ export class Overwrite {
 
 		    // Set position at bottom of token
 		    let ox = gs / 24;
-		    name.position.set(this.w-2, 8);
+		    name.position.set(this.w-2, 12);
 		   
 
-		    let sprite = PIXI.Sprite.from('./modules/EnhancedMovement/assets/walking-solid.svg');
+		   // let sprite = PIXI.Sprite.from('./modules/EnhancedMovement/assets/walking-solid.svg');
 		    // Anchor to the top-center of the nameplate
-		    sprite.anchor.set(1, 0);
+		    //sprite.anchor.set(1, 0);
 
 		    // Adjust dimensions
-		    bounds = sprite.getBounds();
-		    ratio = bounds.width / bounds.height;
+		  //  bounds = sprite.getBounds();
+		  //  ratio = bounds.width / bounds.height;
 		    
 
 		    // Downsize the name using the given scaling ratio
 		    //const nrows = Math.ceil(bounds.height / textHeight);
-		    sprite.height = name.height-7;
-		    sprite.width = sprite.height * ratio;
+		    //sprite.height = name.height-7;
+		   // sprite.width = sprite.height * ratio;
 		   
 		    // Set position at bottom of token
 		    ox = gs / 24;
-		    sprite.position.set(this.w-name.width-3, 11 );
+		   // sprite.position.set(this.w-name.width-3, 11 );
 		    
-		    let totalWidth = sprite.width+name.width;
+		    let totalWidth = name.width //+ sprite.width;
 		    const bg = new PIXI.Graphics();
 		   
 		    bg.lineStyle(1, 0x333333, 1);
 			bg.beginFill(0x555555, 0.9);
-			bg.drawRoundedRect(this.w-totalWidth-6,10 , totalWidth+6, sprite.height +3 , 5);
+			bg.drawRoundedRect(this.w-totalWidth-6,12 , totalWidth+6, name.height +3 , 5);
 			bg.endFill();
 			
 			if(typeof this.speedUI != 'undefined'){
@@ -123,7 +132,7 @@ export class Overwrite {
 			    
 			}
 			this.speedUI.addChild(bg);
-		    this.speedUI.addChild(sprite);
+		   // this.speedUI.addChild(sprite);
 		    this.speedUI.addChild(name)
 			if(game.combat != null){
 				if(game.combat.round > 0)
@@ -138,7 +147,7 @@ export class Overwrite {
 		}
 		PlaceableObject.prototype.clone = function(){
 			let clone = oldPOClone.apply(this);
-			clone.remainingSpeed = this.remainingSpeed;
+			//clone.remainingSpeed = this.EnhancedMovement.remainingSpeed;
 			return clone;
 		}
 	}

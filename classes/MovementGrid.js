@@ -1,5 +1,5 @@
 import { PathManager } from "/modules/lib-find-the-path/scripts/pathManager.js";
-import { PointFactory, Neighbors, AngleTypes } from "/modules/lib-find-the-path/scripts/point.js";
+import { PointFactory, AngleTypes } from "/modules/lib-find-the-path/scripts/point.js";
 import { MinkowskiParameter } from "/modules/lib-find-the-path/scripts/point.js";
 import { FTPUtility } from "/modules/lib-find-the-path/scripts/utility.js"
 export default class MovementGrid {

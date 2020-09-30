@@ -1,0 +1,120 @@
+#speedHUD {
+	position: absolute;
+	left: 15px;
+    display: flex;
+    align-items: center;
+    display: none;
+    font-size: 18px;
+}
+#speedHUD.active{
+	display: inline-flex;
+}
+#token-name{
+	margin:0 20px 0 11px;
+    text-transform: capitalize;
+}
+#speedHUD > div{
+	flex-shrink: 0;
+}
+#speedHUD .turn-indicator{
+	width: 20px;
+    height: 20px;
+    border: 2px solid #666;
+    border-radius: 50%;
+    background: #777;
+    background: radial-gradient(circle, rgba(207,207,207,1) 27%, rgba(99,99,103,1) 81%, rgba(59,59,59,1) 100%);
+}
+#speedHUD .turn-indicator.on{
+	background: rgb(250,255,247);
+	background: radial-gradient(circle, rgba(250,255,247,1) 9%, rgba(71,255,120,1) 62%, rgba(74,255,110,1) 100%);
+
+}
+#speedHUD .turn-indicator.off{
+	background: rgb(255,207,207);
+	background: radial-gradient(circle, rgba(255,207,207,1) 9%, rgba(255,71,71,1) 62%, rgba(199,19,19,1) 100%);
+}
+#speedHUD .input-container{
+
+}
+#speedHUD .movement-mode{
+    text-align: center;
+    font-size: 27px;
+    flex-shrink: 0;
+    top: 2px;
+    position: relative;
+    display:inline-block;
+}
+#speedHUD .moveSpeed {
+    color: #fff;
+    width: auto;
+    display: inline-block;
+    flex-shrink: 0;
+    flex-basis: 0;
+    min-width: 30px;
+    min-height: 33px;
+    font-size: 24px;
+    text-align: center;
+    border: 1px solid #666;
+    padding: 0 5px;
+    margin-left: 5px;
+}
+#speedHUD label {
+	font-size: 18px;
+	text-transform: uppercase;
+	margin-left:5px;
+}
+#speedHUD .movement-mode:hover .otherModes {
+	display: block;
+}
+#speedHUD .otherModes{
+	list-style: none;
+    position: absolute;
+    bottom: 48%;
+    max-height: initial;
+    padding: 0;
+    padding-bottom: 22px;
+    left: -10px;
+    display: none;
+}
+#speedHUD .otherModes .app {
+	padding: 3px 8px;
+}
+#speedHUD .otherModes li{
+	display: block;
+    font-size: 21px;
+    line-height: 1.5;
+    cursor: pointer;
+    min-width: 30px;
+    min-height: 30px;
+    
+}
+li.shovel{
+     margin-top: 5px;
+}
+.shovel{
+    background-image:url(../assets/shovel.svg);
+    background-repeat: no-repeat;
+    background-position: center;
+    width:26px;
+    height: 26px;
+    top:5px !important;
+}
+.wings {
+    background-image:url(../assets/wings.svg);
+    background-repeat: no-repeat;
+    background-position: center;
+    width:26px;
+    height: 26px;
+    top:5px !important;
+
+}
+#dash-btn{
+    position: absolute;
+    right: 117%;
+    top: -22%;
+}
+#dash-btn.active{
+    border: 1px solid #ff6400;
+    background: rgb(255,255,255,0.6);
+    color: #000;
+}
