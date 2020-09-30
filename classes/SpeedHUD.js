@@ -42,7 +42,7 @@ export default class SpeedHUD extends FormApplication {
 			modeList:null
 		}
 		Hooks.on('updateSpeedHUD',(hud)=>{
-			console.log(hud);
+			//console.log(hud);
 		})
 	}
 	// set currentToken(val){
@@ -77,7 +77,7 @@ export default class SpeedHUD extends FormApplication {
 		});
     }
     getData(options={}) {
-    	console.log('getData')
+    	
 	    return {
 	      active:(this.token) ? true:false,
 	      data:this.data,
@@ -167,13 +167,13 @@ export default class SpeedHUD extends FormApplication {
 	 	}
 	}
 	updateHUD(updates={},render=false){
-		console.log(this.token)
+
 		if(this.token == false){
 			this.data = mergeObject(this.data,updates);
 		}else{
 			this.em = this.token.EnhancedMovement;
 			this.movementTypes = this.em.movementTypes;
-			console.log(this.movementTypes)
+
 			this.mode = this.em.movementMode;
 			this.data.modes = this.modes;
 			this.updateTracker(false)

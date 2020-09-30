@@ -1,11 +1,10 @@
 
 export default class EnhancedMovement {
 	constructor(token){
-		
-		this.totalSpeed = 0;
-		
+
 		this.token = token;
 		this.actor = this.token.actor;
+		this.totalSpeed = this.token.getFlag('EnhancedMovement','totalSpeed') ||0;
 		this.isDashing =  this.token.getFlag('EnhancedMovement','isDashing') || false;
 		this.movementMode = (typeof this.token.getFlag('EnhancedMovement','movementMode') != 'undefined') ? this.token.getFlag('EnhancedMovement','movementMode'):'walk';
 		this.nDiagonals = this.token.getFlag('EnhancedMovement','nDiagonal') || 0;
@@ -51,6 +50,16 @@ export default class EnhancedMovement {
 		this.movementTypes[type.toLowerCase()]={
 			maxSpeed:speed
 		}
+		if(canvas.hud.speedHUD.token.id != this.token.id){
+			canvas.hud.speedHUD.updateHUD({},true)
+		}
+		this.token.refresh();
+	}
+	removeMovementType(type){
+		type = type.toLowerCase();
+		if(this.movementMode == type)
+			this.movementMode = 'walk';
+		delete this.movementTypes[type];
 	}
 	switchType(type){
 		this.movementMode = type.toLowerCase();
@@ -64,9 +73,11 @@ export default class EnhancedMovement {
 			}
 		}else
 			this.remainingSpeed = (this.maxSpeed * ((this.isDashing) ? 2:1)) - this.totalSpeed;
+
 		console.log(this.remainingSpeed,type,this.maxSpeed)
 		this.token.refresh()
 		this.token.setFlag('EnhancedMovement','movementMode',this.movementMode)
+		this.token.setFlag('EnhancedMovement','remainingSpeed',this.remainingSpeed)
 	}
 	reset(){
 		console.log('reset EnhancedMovement')

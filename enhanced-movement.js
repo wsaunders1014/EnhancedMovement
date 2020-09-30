@@ -12,7 +12,7 @@ Overwrite.init();
 
 
 Hooks.on('init',()=>{
-	CONFIG.debug.hooks = true;
+	//CONFIG.debug.hooks = true;
 	//CONFIG.debug.mouseInteraction = true;
 	//console.log(new PathManager)
 	// game.settings.register('EnhancedMovement', 'enableGrid', {
@@ -235,22 +235,46 @@ Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
 			let nDiagonal = token.getFlag('EnhancedMovement','nDiagonal') || 0;
 			const prev = {x:token._validPosition.x,y:token._validPosition.y}
 			const next = {x:updates.x || token.x,y:updates.y || token.y}
-		
-			const ny = Math.abs(next.y-prev.y) / canvas.dimensions.size;
-			const nx = Math.abs(next.x-prev.x) / canvas.dimensions.size;
+			
+			const isUp = (next.y < prev.y) ? true:false;
+			const isRight = (next.x > prev.x) ? true:false;
+			console.log('isUp',isUp,'isRight',isRight)
+			let [gridX,gridY] = canvas.grid.grid.getGridPositionFromPixels(next.x,next.y);
+			//let [gridX,gridY] = canvas.grid.grid.getGridPositionFromPixels(prev.x,prev.y);
+			const dy =  (next.y-prev.y) / canvas.dimensions.size;
+			const dx = (next.x-prev.x) / canvas.dimensions.size;
+			const ny = Math.abs(dy) ;
+			const nx = Math.abs(dx);
 			let nd = Math.min(nx, ny);
 		    let ns = Math.abs(ny - nx);
+		    console.log(dx,dy);
+			let distance = 0;
+		    if(nx > 1 || ny > 1){
+		    	//dragged
+		    }else{
+		    	//shifted
+		    	let terrainInfo = checkForTerrain(gridX,gridY)
+				console.log('terrainInfo',terrainInfo);
+				distance += terrainInfo.multiple * canvas.scene.data.gridDistance - canvas.scene.data.gridDistance;
+		    }
+
+		  //   for(let x = gridX; x < gridX + dx; x++){
+		  //   	let terrainInfo = checkForTerrain(x,gridY)
+				// console.log('terrainInfo',terrainInfo);
+		  //   }
+
+
 		    nDiagonal += nd;
 		    token.data.flags.EnhancedMovement.nDiagonal = nDiagonal;
 		    token.setFlag('EnhancedMovement','nDiagonal',nDiagonal);
-		    let distance = 0;
+		    
 			if(canvas.grid.diagonalRule == '555'){
-				 distance = (ns + nd) * canvas.scene.data.gridDistance;
+				 distance += (ns + nd) * canvas.scene.data.gridDistance;
 			}else if(canvas.grid.diagonalRule =='5105'){
 			
 			    let nd10 = Math.floor(nDiagonal / 2) - Math.floor((nDiagonal - nd) / 2);
       			let spaces = (nd10 * 2) + (nd - nd10) + ns;
-			    distance = spaces * canvas.dimensions.distance;
+			    distance += spaces * canvas.dimensions.distance;
 			}
 			if(gmAltPress) distance = 0;
 			
@@ -264,6 +288,7 @@ Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
 				return false;
 			}else{
 				token.EnhancedMovement.totalSpeed += distance;
+				token.setFlag('EnhancedMovement','totalSpeed', token.EnhancedMovement.totalSpeed)
 				token.EnhancedMovement.remainingSpeed = (modSpeed < 0) ? 0:modSpeed;
 				token.setFlag('EnhancedMovement','remainingSpeed', modSpeed);
 				canvas.hud.speedHUD.updateHUD({},true)
@@ -373,3 +398,10 @@ Hooks.on('renderTokenHUD',(tokenHUD,element,data)=>{
 	let isDashing = (token.EnhancedMovement.isDashing) ? 'active':''
 	element.find('.elevation').append(`<div id="dash-btn" class="control-icon fas fa-running ${isDashing}"></div>`)
 })
+
+function checkForTerrain(x,y){
+	console.log(x,y)
+	if(typeof canvas.terrain.costGrid[x] == 'undefined') return false
+	if(typeof canvas.terrain.costGrid[x][y] == 'undefined') return false
+	return canvas.terrain.costGrid[x][y];
+}
