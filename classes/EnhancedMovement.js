@@ -54,13 +54,17 @@ export default class EnhancedMovement {
 	}
 	switchType(type){
 		this.movementMode = type.toLowerCase();
-		if(typeof game.combat != null){
+		if(game.combat != null){
 			if( typeof game.combat.combatant !='undefined'){
-				if(game.combat.combatant.tokenId != this.token.id)
+				if(game.combat.combatant.tokenId != this.token.id){
 					this.remainingSpeed = 0;
+				}else{
+					this.remainingSpeed = (this.maxSpeed * ((this.isDashing) ? 2:1)) - this.totalSpeed;
+				}
 			}
 		}else
 			this.remainingSpeed = (this.maxSpeed * ((this.isDashing) ? 2:1)) - this.totalSpeed;
+		console.log(this.remainingSpeed,type,this.maxSpeed)
 		this.token.refresh()
 		this.token.setFlag('EnhancedMovement','movementMode',this.movementMode)
 	}

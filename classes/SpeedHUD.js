@@ -154,12 +154,9 @@ export default class SpeedHUD extends FormApplication {
 	updateMode(mode,rerender = false){
 
 		this.em.switchType(mode)
-	 	//this.mode = mode;
-	 	// this.data.modeIcon = speedUI[this.mode].icon;
-	 	// this.data.modeList = this.listModes(this.mode,this.movementTypes);
+	 	
 	 	this.updateHUD({},rerender)
-	 	// if(rerender)
-	 	// 	this.render();
+	 	
 
 	 	switch(mode){
 	 		case 'dash':
