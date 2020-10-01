@@ -283,7 +283,8 @@ Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
 			token.EnhancedMovement.totalSpeed += distance;
 			token.setFlag('EnhancedMovement','totalSpeed', token.EnhancedMovement.totalSpeed)
 			token.EnhancedMovement.remainingSpeed = (modSpeed < 0) ? 0:modSpeed;
-			token.setFlag('EnhancedMovement','remainingSpeed', modSpeed);
+			token.EnhancedMovement.updateMovementSpeedFlag();
+		
 			canvas.hud.speedHUD.updateHUD()
 		}
 	
@@ -301,6 +302,7 @@ Hooks.on('updateToken',(scene,tokenData,updates,diff)=>{
 		if(updates.flags.hasOwnProperty('EnhancedMovement')){
 			if(updates.flags.EnhancedMovement.hasOwnProperty('remainingSpeed')){
 				token.EnhancedMovement.remainingSpeed = updates.flags.EnhancedMovement.remainingSpeed;
+				//token.EnhancedMovement.updateMovementSpeedFlag();
 				token.refresh();
 
 				if(canvas.hud.speedHUD.token.id == token.id){
@@ -340,7 +342,8 @@ Hooks.on('createToken',(scene,tokenData)=>{
 	if(game.user.isGM){
 		let token = canvas.tokens.get(tokenData._id);
 		token.EnhancedMovement = new EnhancedMovement(token);
-		token.setFlag('EnhancedMovement','remainingSpeed',token.EnhancedMovement.maxSpeed);
+		token.EnhancedMovement.updateMovementSpeedFlag();
+		//token.setFlag('EnhancedMovement','remainingSpeed',token.EnhancedMovement.maxSpeed);
 	}
 })
 //ACTOR HOOKS
@@ -354,7 +357,10 @@ Hooks.on('updateActor',async (actor,data,diff,userID)=>{
 
 				token.EnhancedMovement.remainingSpeed = newSpeed - diff;
 				canvas.hud.speedHUD.updateHUD()
-				token.setFlag('EnhancedMovement','remainingSpeed', newSpeed-diff);
+				token.unsetFlag('EnhancedMovement','remainingSpeed').then(()=>{
+					token.setFlag('EnhancedMovement','remainingSpeed', newSpeed-diff);
+				})
+				
 				token.refresh();
 				
 				//if(token.movementGrid.visible == true) token.movementGrid.highlightGrid();

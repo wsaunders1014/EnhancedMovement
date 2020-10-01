@@ -44,6 +44,12 @@ export default class EnhancedMovement {
 			})
 		}
 	}
+	async updateMovementSpeedFlag(){
+		await this.token.unsetFlag('EnhancedMovement','remainingSpeed').then(()=>{
+			this.token.setFlag('EnhancedMovement','remainingSpeed', this.remainingSpeed);
+		});
+		
+	}
 	addMovementType(type,speed){
 		type = type.toLowerCase();
 		speed = parseFloat(speed);
