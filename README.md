@@ -1,10 +1,10 @@
 <p>This module aims to track and differentiate the different types of movement a token has during combat in DnD 5e as well as implement automatic Difficult Terrain tracking through the dependent Terrain Layer module.</p>
 When combat starts, all token's movement speeds are reset to their default max. A user can see the different movement modes a token has in the Movement tracker. For instance an Adult Blue Dragon has a walk speed of 40, burrow speed of 30, and a flying speed of 80. This module currently only supports the PHB RAW interpretation of tracking multiple movement types. 
-```
-If you have more than one speed, such as your walking speed and a flying speed, you can switch back and forth between your speeds during your move. Whenever you switch, subtract the distance you've already moved from the new speed. The result determines how much farther you can move. If the result is 0 or less, you can't use the new speed during the current move.
 
-For example, if you have a speed of 30 and a flying speed of 60 because a wizard cast the fly spell on you, you could fly 20 feet, then walk 10 feet, and then leap into the air to fly 30 feet more.
-```
+>If you have more than one speed, such as your walking speed and a flying speed, you can switch back and forth between your speeds during your move. Whenever you switch, subtract the distance you've already moved from the new speed. The result determines how much farther you can move. If the result is 0 or less, you can't use the new speed during the current move.
+>
+>For example, if you have a speed of 30 and a flying speed of 60 because a wizard cast the fly spell on you, you could fly 20 feet, then walk 10 feet, and then leap into the air to fly 30 feet more.
+
 
 When combat is started, each token's current movement speed is displayed ON their token as well for ease. Players can only see movement of token's they own, but the GM can see all tokens.
 
