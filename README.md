@@ -1,3 +1,8 @@
+v0.0.2 -
+Some small css tweaks to the tracker
+Fixed some major issues with Hex maps
+Honestly don't even remember, but a lot of little bug fixes.
+
 <p>This module aims to track and differentiate the different types of movement a token has during combat in DnD 5e as well as implement automatic Difficult Terrain tracking through the dependent Terrain Layer module.</p>
 When combat starts, all token's movement speeds are reset to their default max. A user can see the different movement modes a token has in the Movement tracker. For instance an Adult Blue Dragon has a walk speed of 40, burrow speed of 30, and a flying speed of 80. This module currently only supports the PHB RAW interpretation of tracking multiple movement types. 
 

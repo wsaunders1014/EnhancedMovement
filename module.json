@@ -3,7 +3,7 @@
   "title": "Enhanced Movement",
   "description": "A module that sets out to track player's movement during combat.",
   "authors": [{"name":"Will Saunders","email":"willsaunders1014@gmail.com" }],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "minimumCoreVersion": "0.6.4",
   "compatibleCoreVersion":"0.6.6",
   "scripts":[
@@ -34,5 +34,5 @@
   "changelog":"https://raw.githubusercontent.com/wsaunders1014/EnhancedMovement/master/README.md",
   "url":"https://github.com/wsaunders1014/EnhancedMovement",
   "manifest":"https://raw.githubusercontent.com/wsaunders1014/EnhancedMovement/master/module.json",
-  "download":"https://github.com/wsaunders1014/EnhancedMovement/releases/download/0.0.1/EnhancedMovement.zip"
+  "download":"https://github.com/wsaunders1014/EnhancedMovement/releases/download/0.0.2/EnhancedMovement.zip"
 }
