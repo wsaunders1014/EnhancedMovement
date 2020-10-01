@@ -244,7 +244,7 @@ Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
 	 	path.forEach((point)=>{
 	 			let terrainInfo = checkForTerrain(point[0],point[1])
 	 			if(terrainInfo){
-	 				if(terrainInfo.type == 'ground' && token.EnhancedMovement.movementMode == 'walk')
+	 				if(terrainInfo.type == 'ground' && token.EnhancedMovement.movementMode == 'walk' && !token.EnhancedMovement.ignoreDifficultTerrain)
 	 					distance += terrainInfo.multiple * canvas.scene.data.gridDistance - canvas.scene.data.gridDistance;
 	 			}
 	 	})

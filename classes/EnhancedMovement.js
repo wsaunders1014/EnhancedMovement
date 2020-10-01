@@ -8,7 +8,7 @@ export default class EnhancedMovement {
 		this.isDashing =  this.token.getFlag('EnhancedMovement','isDashing') ?? false;
 		this.movementMode = (typeof this.token.getFlag('EnhancedMovement','movementMode') != 'undefined') ? this.token.getFlag('EnhancedMovement','movementMode'):'walk';
 		this.nDiagonals = this.token.getFlag('EnhancedMovement','nDiagonal') ?? 0;
-		
+		this.ignoreDifficultTerrain = this.token.getFlag('EnhancedMovement','ignoreDifficultTerrain') ?? false;
 		this._speeds = this.actor.data.data.attributes.speed;
 
 		this.movementTypes = {
@@ -60,6 +60,10 @@ export default class EnhancedMovement {
 		if(this.movementMode == type)
 			this.movementMode = 'walk';
 		delete this.movementTypes[type];
+	}
+	toggleIgnoreTerrain(){
+		this.ignoreDifficultTerrain = !this.ignoreDifficultTerrain;
+		this.token.setFlag('EnhancedMovement','ignoreDifficultTerrain',this.ignoreDifficultTerrain)
 	}
 	switchType(type){
 		this.movementMode = type.toLowerCase();
