@@ -300,6 +300,7 @@ Hooks.on('updateToken',(scene,tokenData,updates,diff)=>{
 	let token = canvas.tokens.get(tokenData._id)
 	if(updates.hasOwnProperty('flags')){
 		if(updates.flags.hasOwnProperty('EnhancedMovement')){
+			console.log(updates)
 			if(updates.flags.EnhancedMovement.hasOwnProperty('remainingSpeed')){
 				token.EnhancedMovement.remainingSpeed = updates.flags.EnhancedMovement.remainingSpeed;
 				//token.EnhancedMovement.updateMovementSpeedFlag();
@@ -318,7 +319,11 @@ Hooks.on('updateToken',(scene,tokenData,updates,diff)=>{
 		//token.movementGrid.clear();
 		if(interval == null) {
 			interval = setInterval(()=>{
-				
+				if(typeof token == 'undefined'){
+					clearInterval(interval);
+					interval = null;
+					Hooks.call('moveToken',token)
+				}
 				if(token._movement == null){
 					clearInterval(interval);
 					interval = null;
@@ -339,16 +344,18 @@ Hooks.on('moveToken',(token)=>{
 })
 
 Hooks.on('createToken',(scene,tokenData)=>{
-	if(game.user.isGM){
+	console.log('createToken')
+	//if(game.user.isGM){
 		let token = canvas.tokens.get(tokenData._id);
 		token.EnhancedMovement = new EnhancedMovement(token);
 		token.EnhancedMovement.updateMovementSpeedFlag();
 		//token.setFlag('EnhancedMovement','remainingSpeed',token.EnhancedMovement.maxSpeed);
-	}
+	//}
 })
 //ACTOR HOOKS
 Hooks.on('updateActor',async (actor,data,diff,userID)=>{
-	if(typeof data.data.attributes.speed.value != 'undefined') {
+	console.log(data)
+	if(typeof data?.data?.attributes?.speed?.value != 'undefined') {
 		let newSpeed = data.data.attributes.speed.value;
 		let tokens = getTokensFromActor(actor);
 		if(tokens.length > 0){
@@ -367,7 +374,7 @@ Hooks.on('updateActor',async (actor,data,diff,userID)=>{
 			})
 		}
 	}
-	if(typeof data.data.attributes.speed.special != 'undefined'){
+	if(typeof data?.data?.attributes?.speed?.special != 'undefined'){
 		 let special = data.data.attributes.speed.special;
 		
 		let tokens = getTokensFromActor(actor);
