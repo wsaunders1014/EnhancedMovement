@@ -17,7 +17,7 @@ export default class EnhancedMovement {
 			}
 		}
 		this.getMovementTypes();
-		this.remainingSpeed =  (this.maxSpeed * ((this.isDashing) ? 2:1))-this.totalSpeed;
+		this.remainingSpeed =  this.token.getFlag('EnhancedMovement','remainingSpeed') ?? this.maxSpeed;//(this.maxSpeed * ((this.isDashing) ? 2:1)) - this.totalSpeed;
 	}
 	get maxSpeed(){
 		return this.movementTypes[this.movementMode].maxSpeed;
@@ -51,7 +51,7 @@ export default class EnhancedMovement {
 			maxSpeed:speed
 		}
 		if(canvas.hud.speedHUD.token.id != this.token.id){
-			canvas.hud.speedHUD.updateHUD({},true)
+			canvas.hud.speedHUD.updateHUD()
 		}
 		this.token.refresh();
 	}
@@ -93,7 +93,7 @@ export default class EnhancedMovement {
 		this.token.setFlag('EnhancedMovement','nDiagonal',0)
 		this.token.setFlag('EnhancedMovement','isDashing', false)
 		if(canvas.hud.speedHUD.token != false){
-			canvas.hud.speedHUD.updateHUD({},true)
+			canvas.hud.speedHUD.updateHUD()
 		}
 		this.token.refresh();
 	}
@@ -112,7 +112,7 @@ export default class EnhancedMovement {
 		this.remainingSpeed = this.remainingSpeed + this.maxSpeed;
 		this.token.setFlag('EnhancedMovement','remainingSpeed',this.remainingSpeed);
 		if(canvas.hud.speedHUD.token){
-			canvas.hud.speedHUD.updateHUD({},true)
+			canvas.hud.speedHUD.updateHUD()
 		}
 
 	}
@@ -122,7 +122,7 @@ export default class EnhancedMovement {
 		this.remainingSpeed = this.remainingSpeed - this.maxSpeed;
 		this.token.setFlag('EnhancedMovement','remainingSpeed',this.remainingSpeed);
 		if(canvas.hud.speedHUD.token){
-			canvas.hud.speedHUD.updateHUD({},true)
+			canvas.hud.speedHUD.updateHUD()
 		}
 	}
 }

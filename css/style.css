@@ -38,9 +38,9 @@
 }
 #speedHUD .movement-mode{
     text-align: center;
-    font-size: 27px;
+    font-size: 24px;
     flex-shrink: 0;
-    top: 2px;
+    top: 1px;
     position: relative;
     display:inline-block;
 }
@@ -51,7 +51,7 @@
     flex-shrink: 0;
     flex-basis: 0;
     min-width: 30px;
-    min-height: 33px;
+    min-height: 32px;
     font-size: 24px;
     text-align: center;
     border: 1px solid #666;

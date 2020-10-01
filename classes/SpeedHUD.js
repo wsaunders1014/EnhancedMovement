@@ -24,14 +24,14 @@ const speedUI = {
 		icon:"shovel"
 	}
 }
-export default class SpeedHUD extends FormApplication {
+export default class SpeedHUD extends Application {
 	constructor(options={}){
 		super(options);
 		this.object = {};
 		this.mode = null;
 		this.token = false;
 		this.em = null;
-	
+		this.listeners = false;
 		this.data = {
 			on:"",
 			name:"",
@@ -95,12 +95,14 @@ export default class SpeedHUD extends FormApplication {
 	   
 	}
 	activateListeners(html) {
+		
 	 	const moveSpeed = this.element.find('#moveSpeed');
 	 	const mode = this.element.find('#mode');
-	 	// moveSpeed.on('input',(e)=>{
-	 	// 	console.log(e.target.innerText)
-	 	// 	
-	 	// })
+	 	
+	 	moveSpeed.off();
+	 	$('body').off('click','#speedHUD li');
+	 	
+	 	
 	 	moveSpeed.keypress(function(e) {
 	 		if(e.which == 13){ this.blur(); e.preventDefault(); return false;}
 		    if (isNaN(String.fromCharCode(e.which))) e.preventDefault();
@@ -125,9 +127,9 @@ export default class SpeedHUD extends FormApplication {
 	***/
 
 	updateMovement(speed){
-		this.em.remainingSpeed = speed;
+		this.em.remainingSpeed = parseFloat(speed.toFixed(2));
 		this.token.refresh();
-		this.token.setFlag('EnhancedMovement','remainingSpeed',speed)
+		this.token.setFlag('EnhancedMovement','remainingSpeed',parseFloat(speed.toFixed(2)))
 		Hooks.call('updateSpeedHUD',this);
 	}
 	/*
@@ -136,9 +138,9 @@ export default class SpeedHUD extends FormApplication {
 	*/
 	addMode(type,speed){
 		this.em.addMovementType(type,speed);
-		this.updateHUD({},true)
+		this.updateHUD()
 	}
-	updateTracker(rerender = true){
+	updateTracker(rerender = false){
 		if(game.combat != null && game.combat.round > 0 && game.combat.combatants.length > 0){
 			if(this.token.id == game.combat.combatant.tokenId)
 				this.data.on = 'on';
@@ -155,7 +157,7 @@ export default class SpeedHUD extends FormApplication {
 
 		this.em.switchType(mode)
 	 	
-	 	this.updateHUD({},rerender)
+	 	this.updateHUD()
 	 	
 
 	 	switch(mode){
@@ -166,7 +168,7 @@ export default class SpeedHUD extends FormApplication {
 	 		break;
 	 	}
 	}
-	updateHUD(updates={},render=false){
+	updateHUD(render=true,updates={}){
 
 		if(this.token == false){
 			this.data = mergeObject(this.data,updates);
@@ -176,7 +178,7 @@ export default class SpeedHUD extends FormApplication {
 
 			this.mode = this.em.movementMode;
 			this.data.modes = this.modes;
-			this.updateTracker(false)
+			this.updateTracker()
 			//console.log(this.movementTypes)
 			this.data.name = (this.token) ? this.token.data.name:"";
 			updates = mergeObject(updates,{
@@ -188,8 +190,13 @@ export default class SpeedHUD extends FormApplication {
 			});
 			this.data = mergeObject(this.data,updates);
 		}
-		if(render)
-		this.render(true);
+		
+		if(render) this.render(true);
+		// this.element.addClass('active');
+		// this.element.find('#token-name').html(this.data.name);
+		// this.element.find('#mode').attr('class',`movement-mode ${this.data.modeIcon}`)
+		// this.element.find('#turn-tracker').attr('class',`turn-indicator ${this.data.on}`)
+		// this.element.find('#moveSpeed').html(this.data.remainingSpeed);
 	}
 	get modeIcon(){
 		return this.movementTypes[this.mode].modeIcon;
@@ -201,5 +208,6 @@ export default class SpeedHUD extends FormApplication {
 
 }
 Hooks.on('renderPlayerList',()=>{
+	if(typeof canvas.hud.speedHUD != 'undefined')
 	canvas.hud.speedHUD.element.css({bottom:window.innerHeight - $('#players').offset().top+15})
 })

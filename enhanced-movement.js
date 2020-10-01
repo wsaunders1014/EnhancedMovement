@@ -56,8 +56,9 @@ Hooks.on('init',()=>{
 });
 
 
-Hooks.on('ready',()=>{
+Hooks.on('canvasReady',()=>{
 	//canvas.grid.addHighlightLayer(`EnhancedMovement.${game.userId}`);
+	//canvas.hud.speedHUD = new SpeedHUD();
 	canvas.tokens.placeables.forEach((token)=>{
 		if(typeof token.actor != 'undefined'){
 			//token.movementGrid = new MovementGrid(token);
@@ -65,7 +66,7 @@ Hooks.on('ready',()=>{
 		}
 	})
 
-	canvas.hud.speedHUD.updateHUD({},true)
+	canvas.hud.speedHUD.updateHUD()
 	//Allows GM to override movement restrictions.
 	 if (game.user.isGM){
 		$(window).on('keydown',(e)=>{
@@ -158,7 +159,7 @@ Hooks.on('updateCombat',(combat,data,diff,userID)=>{
 			//Combat Started
 			if(token !== null){
 				canvas.hud.speedHUD.token = token;
-				canvas.hud.speedHUD.updateHUD({},true);
+				canvas.hud.speedHUD.updateHUD();
 				canvas.hud.speedHUD.updateTracker()
 			}
 			canvas.tokens.placeables.forEach((token)=>{
@@ -202,7 +203,7 @@ Hooks.on('controlToken',(token,controlled)=>{
 	
 	if(controlled){
 		canvas.hud.speedHUD.token = token;
-		canvas.hud.speedHUD.updateHUD({},true);
+		canvas.hud.speedHUD.updateHUD();
 		
 	}else{
 		canvas.hud.speedHUD.token = false;
@@ -210,7 +211,7 @@ Hooks.on('controlToken',(token,controlled)=>{
 		setTimeout(()=>{
 			
 			if(canvas.hud.speedHUD.token){
-				canvas.hud.speedHUD.updateHUD({},true);
+				canvas.hud.speedHUD.updateHUD();
 			}else{
 				canvas.hud.speedHUD.close();
 			}
@@ -239,13 +240,16 @@ Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
 	    let ns = Math.abs(ny - nx);
 	  
 		let distance = 0;
-	  
+	  	//Gets all point between start and end.
 	 	let path = calcStraightLine ([prevX,prevY],[nextX,nextY]);
+	 	console.log(path)
 	 	path.forEach((point)=>{
 	 			let terrainInfo = checkForTerrain(point[0],point[1])
+	 			console.log(terrainInfo)
 	 			if(terrainInfo){
 	 				if(terrainInfo.type == 'ground' && token.EnhancedMovement.movementMode == 'walk' && !token.EnhancedMovement.ignoreDifficultTerrain)
-	 					distance += terrainInfo.multiple * canvas.scene.data.gridDistance - canvas.scene.data.gridDistance;
+	 					distance += (terrainInfo.multiple * canvas.scene.data.gridDistance) - canvas.scene.data.gridDistance;
+	 					
 	 			}
 	 	})
 	 	
@@ -254,13 +258,17 @@ Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
 	    token.setFlag('EnhancedMovement','nDiagonal',nDiagonal);
 	    
 		if(canvas.grid.diagonalRule == '555'){
-			 distance += (ns + nd) * canvas.scene.data.gridDistance;
+			let d = Math.floor(ns + nd) * canvas.scene.data.gridDistance;
+			distance += d + ((canvas.scene.data.gridType > 1) ? canvas.scene.data.gridDistance:0);
+			
 		}else if(canvas.grid.diagonalRule =='5105'){
 		
 		    let nd10 = Math.floor(nDiagonal / 2) - Math.floor((nDiagonal - nd) / 2);
   			let spaces = (nd10 * 2) + (nd - nd10) + ns;
 		    distance += spaces * canvas.dimensions.distance;
 		}
+		//Hex Distances are only 3.75 for some reason, we need to clamp this so it's always at least 5.
+		if(distance < canvas.scene.data.gridDistance) distance = canvas.scene.data.gridDistance;
 		if(gmAltPress) distance = 0;
 		
 		let speed = token.EnhancedMovement.remainingSpeed;
@@ -276,7 +284,7 @@ Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
 			token.setFlag('EnhancedMovement','totalSpeed', token.EnhancedMovement.totalSpeed)
 			token.EnhancedMovement.remainingSpeed = (modSpeed < 0) ? 0:modSpeed;
 			token.setFlag('EnhancedMovement','remainingSpeed', modSpeed);
-			canvas.hud.speedHUD.updateHUD({},true)
+			canvas.hud.speedHUD.updateHUD()
 		}
 	
 		if( game.combat.started && game.combat.combatant.tokenId == tokenData._id){
@@ -296,7 +304,7 @@ Hooks.on('updateToken',(scene,tokenData,updates,diff)=>{
 				token.refresh();
 
 				if(canvas.hud.speedHUD.token.id == token.id){
-					canvas.hud.speedHUD.updateHUD({},true);
+					canvas.hud.speedHUD.updateHUD();
 				}
 			}
 		}
@@ -345,7 +353,7 @@ Hooks.on('updateActor',async (actor,data,diff,userID)=>{
 				let diff = token.EnhancedMovement.remainingSpeed - token.EnhancedMovement.maxSpeed;
 
 				token.EnhancedMovement.remainingSpeed = newSpeed - diff;
-				canvas.hud.speedHUD.updateHUD({},true)
+				canvas.hud.speedHUD.updateHUD()
 				token.setFlag('EnhancedMovement','remainingSpeed', newSpeed-diff);
 				token.refresh();
 				
@@ -361,7 +369,7 @@ Hooks.on('updateActor',async (actor,data,diff,userID)=>{
 			tokens.forEach((token)=>{
 				token.EnhancedMovement.getMovementTypes();
 				if(canvas.hud.speedHUD.token.id == token.id)
-					canvas.hud.speedHUD.updateHUD({},true)
+					canvas.hud.speedHUD.updateHUD()
 			})
 		}
 	}
@@ -404,8 +412,14 @@ function calcStraightLine (startCoordinates, endCoordinates) {
     // Define differences and error check
     var dx = Math.abs(x2 - x1);
     var dy = Math.abs(y2 - y1);
-    var sx = (x1 < x2) ? 1 : -1;
-    var sy = (y1 < y2) ? 1 : -1;
+    var sx,sy;
+    if(canvas.scene.data.gridType == 0){
+		 sx = (x1 < x2) ? 10 : -10;
+    	 sy = (y1 < y2) ? 10 : -10;
+    }else{
+    	 sx = (x1 < x2) ? 1 : -1;
+    	 sy = (y1 < y2) ? 1 : -1;
+    }
     var err = dx - dy;
     // Set first coordinates
     //coordinatesArray.push([x1, y1]);
