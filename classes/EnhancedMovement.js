@@ -17,7 +17,7 @@ export default class EnhancedMovement {
 			}
 		}
 		this.getMovementTypes();
-		this.remainingSpeed = (typeof this.token.getFlag('EnhancedMovement','remainingSpeed') != 'undefined') ?  this.token.getFlag('EnhancedMovement','remainingSpeed')-this.totalSpeed:this.maxSpeed;
+		this.remainingSpeed =  (this.maxSpeed * ((this.isDashing) ? 2:1))-this.totalSpeed;
 	}
 	get maxSpeed(){
 		return this.movementTypes[this.movementMode].maxSpeed;
