@@ -50,7 +50,7 @@ export class Overwrite {
 			try{this.speedUI.removeChildren()}catch(e){}
 			 // Gate font size based on grid size
 
-			const speed = this.EnhancedMovement.remainingSpeed;
+			const speed = Math.max(this.EnhancedMovement.remainingSpeed,0);
 		    const gs = canvas.dimensions.size;
 		    let h = 24;
 		    if ( gs >= 200 ) h = 36;

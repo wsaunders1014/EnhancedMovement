@@ -1,6 +1,8 @@
 import SpeedHUD from './classes/SpeedHUD.js';
 import EnhancedMovement from './classes/EnhancedMovement.js';
 //import MovementGrid from './classes/MovementGrid.js';
+import { PathManager } from "/modules/lib-find-the-path/scripts/pathManager.js";
+import { MinkowskiParameter,PointFactory } from "/modules/lib-find-the-path/scripts/point.js";
 import { Overwrite } from './js/Overwrite.js';
 let speed;
 let combat;
@@ -9,8 +11,7 @@ let stopMovement = false;
 let gmAltPress = false;
 Overwrite.init();
 
-
-
+let pathManager = new PathManager (MinkowskiParameter.Chebyshev);
 Hooks.on('init',()=>{
 	//CONFIG.debug.hooks = true;
 	//CONFIG.debug.mouseInteraction = true;
@@ -54,12 +55,7 @@ Hooks.on('init',()=>{
 
 });
 
-// function getTokenMovementTypes(token){
-// 	if(!token.hasOwnProperty('actor')) return false;
-// 	let normal = 'walking'
-// 	let array = token.actor.data.data.attributes.speed.special
-// 	let special = token.actor.data.data.attributes.speed.special;
-// }
+
 Hooks.on('ready',()=>{
 	//canvas.grid.addHighlightLayer(`EnhancedMovement.${game.userId}`);
 	canvas.tokens.placeables.forEach((token)=>{
@@ -115,17 +111,15 @@ Hooks.on('createCombat',(combat,data,userID)=>{
 })
 
 Hooks.on('updateCombat',(combat,data,diff,userID)=>{
-	console.log(combat,data)
+	
 	
 	//console.log(combat.previous.round,combat.previous.turn,combat.current.round,combat.current.turn,data,diff,userID)
 	let token = (typeof combat.combatant != 'undefined') ? canvas.tokens.get(combat.combatant.tokenId):null;
-	// if(combat.combatant != null && typeof data.turn != 'undefined' && data.turn != combat.previous.turn){
-		
-	// }
+	
 	if(diff.diff && game.user.isGM){
 		if((data.hasOwnProperty('turn') || data.hasOwnProperty('round')) && combat.combatant !=null){
 			//New Turn
-			console.log('new turn');
+			
 			token.setFlag('EnhancedMovement','nDiagonal',0)
 			
 			if(data.hasOwnProperty('round')){
@@ -202,7 +196,7 @@ Hooks.on('createCombatant',(combat,combatant,data,)=>{
 })
 //TOKEN HOOKS
 Hooks.on('controlToken',(token,controlled)=>{
-	console.log(token,controlled)
+
 	//If user selects multiple tokens, this will be last one selected
 	cToken = (controlled) ? token:null;
 	
@@ -214,7 +208,7 @@ Hooks.on('controlToken',(token,controlled)=>{
 		canvas.hud.speedHUD.token = false;
 		
 		setTimeout(()=>{
-			console.log(canvas.hud.speedHUD.token)
+			
 			if(canvas.hud.speedHUD.token){
 				canvas.hud.speedHUD.updateHUD({},true);
 			}else{
@@ -228,72 +222,63 @@ let nDiagonal = 0;
 Hooks.on('preUpdateToken', (scene,tokenData,updates,diff)=>{
 	//if(game)
 	let token = canvas.tokens.get(tokenData._id)
-
 	if(game.combat !== null && (typeof updates.y != 'undefined' || typeof updates.x != 'undefined')){
-		//COMBAT exists and token moved.
-		//if( game.combat.started && game.combat.combatant.tokenId == tokenData._id){
-			let nDiagonal = token.getFlag('EnhancedMovement','nDiagonal') || 0;
-			const prev = {x:token._validPosition.x,y:token._validPosition.y}
-			const next = {x:updates.x || token.x,y:updates.y || token.y}
-			
-			const isUp = (next.y < prev.y) ? true:false;
-			const isRight = (next.x > prev.x) ? true:false;
-			console.log('isUp',isUp,'isRight',isRight)
-			let [gridX,gridY] = canvas.grid.grid.getGridPositionFromPixels(next.x,next.y);
-			//let [gridX,gridY] = canvas.grid.grid.getGridPositionFromPixels(prev.x,prev.y);
-			const dy =  (next.y-prev.y) / canvas.dimensions.size;
-			const dx = (next.x-prev.x) / canvas.dimensions.size;
-			const ny = Math.abs(dy) ;
-			const nx = Math.abs(dx);
-			let nd = Math.min(nx, ny);
-		    let ns = Math.abs(ny - nx);
-		    console.log(dx,dy);
-			let distance = 0;
-		    if(nx > 1 || ny > 1){
-		    	//dragged
-		    }else{
-		    	//shifted
-		    	let terrainInfo = checkForTerrain(gridX,gridY)
-				console.log('terrainInfo',terrainInfo);
-				distance += terrainInfo.multiple * canvas.scene.data.gridDistance - canvas.scene.data.gridDistance;
-		    }
+		
+		let nDiagonal = token.getFlag('EnhancedMovement','nDiagonal') || 0;
+		const prev = {x:token.x,y:token.y}
+		const next = {x:updates.x ?? token.x,y:updates.y ?? token.y}
+		
+	
+		let [nextX,nextY] = canvas.grid.grid.getGridPositionFromPixels(next.x,next.y);
+		let [prevX,prevY] = canvas.grid.grid.getGridPositionFromPixels(prev.x,prev.y);
+		const dy =  (next.y-prev.y) / canvas.dimensions.size;
+		const dx = (next.x-prev.x) / canvas.dimensions.size;
+		const ny = Math.abs(dy);
+		const nx = Math.abs(dx);
+		let nd = Math.min(nx, ny);
+	    let ns = Math.abs(ny - nx);
+	  
+		let distance = 0;
+	  
+	 	let path = calcStraightLine ([prevX,prevY],[nextX,nextY]);
+	 	path.forEach((point)=>{
+	 			let terrainInfo = checkForTerrain(point[0],point[1])
+	 			if(terrainInfo){
+	 				if(terrainInfo.type == 'ground' && token.EnhancedMovement.movementMode == 'walk')
+	 					distance += terrainInfo.multiple * canvas.scene.data.gridDistance - canvas.scene.data.gridDistance;
+	 			}
+	 	})
+	 	
+	    nDiagonal += nd;
+	    token.data.flags.EnhancedMovement.nDiagonal = nDiagonal;
+	    token.setFlag('EnhancedMovement','nDiagonal',nDiagonal);
+	    
+		if(canvas.grid.diagonalRule == '555'){
+			 distance += (ns + nd) * canvas.scene.data.gridDistance;
+		}else if(canvas.grid.diagonalRule =='5105'){
+		
+		    let nd10 = Math.floor(nDiagonal / 2) - Math.floor((nDiagonal - nd) / 2);
+  			let spaces = (nd10 * 2) + (nd - nd10) + ns;
+		    distance += spaces * canvas.dimensions.distance;
+		}
+		if(gmAltPress) distance = 0;
+		
+		let speed = token.EnhancedMovement.remainingSpeed;
+				
+		let modSpeed = speed - distance;
+		if(modSpeed < 0 && !gmAltPress){
+			/// need to broadcast this.
 
-		  //   for(let x = gridX; x < gridX + dx; x++){
-		  //   	let terrainInfo = checkForTerrain(x,gridY)
-				// console.log('terrainInfo',terrainInfo);
-		  //   }
-
-
-		    nDiagonal += nd;
-		    token.data.flags.EnhancedMovement.nDiagonal = nDiagonal;
-		    token.setFlag('EnhancedMovement','nDiagonal',nDiagonal);
-		    
-			if(canvas.grid.diagonalRule == '555'){
-				 distance += (ns + nd) * canvas.scene.data.gridDistance;
-			}else if(canvas.grid.diagonalRule =='5105'){
-			
-			    let nd10 = Math.floor(nDiagonal / 2) - Math.floor((nDiagonal - nd) / 2);
-      			let spaces = (nd10 * 2) + (nd - nd10) + ns;
-			    distance += spaces * canvas.dimensions.distance;
-			}
-			if(gmAltPress) distance = 0;
-			
-			let speed = token.EnhancedMovement.remainingSpeed;
-					
-			let modSpeed = speed - distance;
-			if(modSpeed < 0 && !gmAltPress){
-				/// need to broadcast this.
-
-				ui.notifications.warn("Creature has exceeded their movement speed this turn.", {permanent: false});
-				return false;
-			}else{
-				token.EnhancedMovement.totalSpeed += distance;
-				token.setFlag('EnhancedMovement','totalSpeed', token.EnhancedMovement.totalSpeed)
-				token.EnhancedMovement.remainingSpeed = (modSpeed < 0) ? 0:modSpeed;
-				token.setFlag('EnhancedMovement','remainingSpeed', modSpeed);
-				canvas.hud.speedHUD.updateHUD({},true)
-			}
-	//	}else 
+			ui.notifications.warn("Creature has exceeded their movement speed this turn.", {permanent: false});
+			return false;
+		}else{
+			token.EnhancedMovement.totalSpeed += distance;
+			token.setFlag('EnhancedMovement','totalSpeed', token.EnhancedMovement.totalSpeed)
+			token.EnhancedMovement.remainingSpeed = (modSpeed < 0) ? 0:modSpeed;
+			token.setFlag('EnhancedMovement','remainingSpeed', modSpeed);
+			canvas.hud.speedHUD.updateHUD({},true)
+		}
+	
 		if( game.combat.started && game.combat.combatant.tokenId == tokenData._id){
 		}else if(!gmAltPress && game.combat.started  && game.combat.combatants.findIndex((i)=>{return i.tokenId == token.id}) !== -1){
 			ui.notifications.warn("It is not your move.", {permanent: false});
@@ -317,15 +302,7 @@ Hooks.on('updateToken',(scene,tokenData,updates,diff)=>{
 		}
 	}
 	//Combat has started
-	//console.log(tokenData)
-	/*if(game.combat !== null && game.combat.started){
-		//if(token.movementGrid != null) token.movementGrid.clear();
 
-		if(token._controlled && getProperty(updates,'flags.EnhancedMovement.remainingSpeed')){
-			//if(token.movementGrid.visible) token.movementGrid.highlightGrid();
-		}
-	}*/
-	
 		
 	if(updates.hasOwnProperty('x') || updates.hasOwnProperty('y')){
 		//token.movementGrid.clear();
@@ -378,7 +355,7 @@ Hooks.on('updateActor',async (actor,data,diff,userID)=>{
 	}
 	if(typeof data.data.attributes.speed.special != 'undefined'){
 		 let special = data.data.attributes.speed.special;
-		console.log(special)
+		
 		let tokens = getTokensFromActor(actor);
 		if(tokens.length > 0){
 			tokens.forEach((token)=>{
@@ -400,8 +377,52 @@ Hooks.on('renderTokenHUD',(tokenHUD,element,data)=>{
 })
 
 function checkForTerrain(x,y){
-	console.log(x,y)
+	
 	if(typeof canvas.terrain.costGrid[x] == 'undefined') return false
 	if(typeof canvas.terrain.costGrid[x][y] == 'undefined') return false
 	return canvas.terrain.costGrid[x][y];
+}
+async function getPath(originPt,destPt,range,token){
+	originPt = PointFactory.segmentFromPoint(originPt)
+	destPt = PointFactory.segmentFromPoint(destPt)
+	const path = await PathManager.pathToSegment (originPt,destPt,range);
+	// const path = await pathManager.pathFromData({
+	// 	"origin": originPt,
+	// 	"dest": destPt,
+	// 	"token": token, // Gets the width and height of the token that is being moved
+	// 	"movement": range
+	// })
+	console.log (path.path);
+}
+function calcStraightLine (startCoordinates, endCoordinates) {
+    var coordinatesArray = new Array();
+    // Translate coordinates
+    var x1 = startCoordinates[0];
+    var y1 = startCoordinates[1];
+    var x2 = endCoordinates[0];
+    var y2 = endCoordinates[1];
+    // Define differences and error check
+    var dx = Math.abs(x2 - x1);
+    var dy = Math.abs(y2 - y1);
+    var sx = (x1 < x2) ? 1 : -1;
+    var sy = (y1 < y2) ? 1 : -1;
+    var err = dx - dy;
+    // Set first coordinates
+    //coordinatesArray.push([x1, y1]);
+    // Main loop
+    while (!((x1 == x2) && (y1 == y2))) {
+        var e2 = err << 1;
+        if (e2 > -dy) {
+            err -= dy;
+            x1 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y1 += sy;
+        }
+        // Set coordinates
+         coordinatesArray.push([x1, y1]);
+    }
+    // Return the result
+    return coordinatesArray;
 }
